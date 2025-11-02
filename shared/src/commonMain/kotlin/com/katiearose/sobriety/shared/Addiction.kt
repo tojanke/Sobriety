@@ -58,6 +58,22 @@ data class Addiction(
             null
     }
 
+    fun getNextMilestone(): Pair<Int, DateTimeUnit>? {
+        val now = Clock.System.now().toEpochMilliseconds()
+        return milestones
+            .mapNotNull { inputPair ->
+                val (quantity, unit) = inputPair
+                val calculatedInstant = runCatching {
+                    history.keys.last() + quantity * unit.toMillis()
+                }.getOrNull()
+                calculatedInstant?.let { Pair(it, inputPair) }
+            }.filter { (calculatedTime, _) ->
+                calculatedTime > now
+            }
+            .minByOrNull { (calculatedTime, _) -> calculatedTime }
+            ?.second
+    }
+
     /**
      * @return - the goal point in milliseconds
      * - the progress as an int in range 0..100
