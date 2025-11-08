@@ -11,6 +11,10 @@ import com.katiearose.sobriety.utils.convertRangeToString
 import com.katiearose.sobriety.utils.convertMilestoneToString
 import java.time.Instant
 import androidx.core.content.edit
+import com.katiearose.sobriety.shared.Addiction
+import com.katiearose.sobriety.shared.CacheHandler
+import java.io.FileNotFoundException
+import java.util.ArrayList
 
 class AddictionAppWidgetProvider : AppWidgetProvider() {
 
@@ -19,6 +23,15 @@ class AddictionAppWidgetProvider : AppWidgetProvider() {
         appWidgetManager: AppWidgetManager,
         appWidgetIds: IntArray
     ) {
+        val cacheHandler = CacheHandler(context)
+        if (addictions.isEmpty())
+            try {
+                context.openFileInput("Sobriety.cache").use {
+                    addictions.addAll(cacheHandler.readCache(it))
+                }
+            } catch (_: FileNotFoundException) {
+            }
+
         appWidgetIds.forEach { appWidgetId ->
             updateAppWidget(context, appWidgetManager, appWidgetId)
         }
@@ -34,6 +47,8 @@ class AddictionAppWidgetProvider : AppWidgetProvider() {
     }
 
     companion object {
+
+        val addictions = ArrayList<Addiction>()
         fun updateAppWidget(context: Context, appWidgetManager: AppWidgetManager, appWidgetId: Int) {
             val pendingIntent: PendingIntent = PendingIntent.getActivity(context, 0,
                 Intent(context, Main::class.java),
@@ -41,7 +56,7 @@ class AddictionAppWidgetProvider : AppWidgetProvider() {
             )
             val prefs = context.getSharedPreferences("widget_prefs", Context.MODE_PRIVATE)
             val creationTimestamp = prefs.getLong("addiction_creation_timestamp_$appWidgetId", -1)
-            val addiction = Main.addictions.find { it.creationTimestamp == creationTimestamp }
+            val addiction = addictions.find { it.creationTimestamp == creationTimestamp }
 
             val views = RemoteViews(
                 context.packageName,
@@ -68,11 +83,6 @@ class AddictionAppWidgetProvider : AppWidgetProvider() {
                         setProgressBar(R.id.widgetMilestoneProgress, 100,0, false)
                         setTextViewText(R.id.widgetMilestoneText, context.getString(R.string.no_next_milestone))
                     }
-                }
-            }
-            else {
-                views.apply {
-                    setTextViewText(R.id.widgetAddictionName, creationTimestamp.toString())
                 }
             }
             appWidgetManager.updateAppWidget(appWidgetId, views)
