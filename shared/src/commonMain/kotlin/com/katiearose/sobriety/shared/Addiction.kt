@@ -19,6 +19,9 @@ data class Addiction(
     val milestones: LinkedHashSet<Pair<Int, DateTimeUnit>>,
 ) {
 
+    val creationTimestamp: Long
+        get() = history.keys.first()
+
     enum class Priority {
         HIGH, MEDIUM, LOW
     }

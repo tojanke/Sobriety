@@ -97,9 +97,12 @@ fun Context.convertRangeToString(start: Long, end: Long = Instant.now().toEpochM
         ).append(" ")
         stringBuilder.append(resources.getQuantityString(R.plurals.seconds, s, s))
     }
-    else {
+    else if(stringBuilder.length >2) {
         //Remove previously inserted comma and space at end
         stringBuilder.deleteCharAt(stringBuilder.length-2)
+    }
+    else {
+        stringBuilder.append(getString(R.string.sub_1hour))
     }
 
     return stringBuilder.toString()
